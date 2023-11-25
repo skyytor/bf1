@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-bf1",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.3.64",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -9,12 +9,19 @@
     "dist"
   ],
   "license": "MIT",
+  "scripts": {},
   "keywords": [
     "chatbot",
     "koishi",
     "plugin"
   ],
   "peerDependencies": {
-    "koishi": "^4.15.6"
+    "koishi": "^4.15.2"
+  },
+  "devDependencies": {
+    "@types/node-schedule": "^2.1.3"
+  },
+  "dependencies": {
+    "node-schedule": "^2.1.1"
   }
 }
