@@ -377,7 +377,7 @@ export async function playerlist13(ctx: Context, gameid: string) {
                 origin: true,
                 platoon: false
             },
-            timeout: 5000
+            timeout: 3000
         })
         return result
     } catch (error) {

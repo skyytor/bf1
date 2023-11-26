@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-bf1",
   "description": "",
-  "version": "0.3.64",
+  "version": "0.3.69-canary",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -9,7 +9,6 @@
     "dist"
   ],
   "license": "MIT",
-  "scripts": {},
   "keywords": [
     "chatbot",
     "koishi",

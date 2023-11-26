@@ -1,7 +1,6 @@
 import { Context, Logger, h } from 'koishi'
 import * as api from './all_gateway'
 import { Config } from './index'
-import { stat_rendering } from './render'
 const logger = new Logger('player_stat')
 
 let classkey = {
@@ -49,7 +48,7 @@ export async function stat(ctx: Context, config: Config, session: any, playernam
                     accuracyRatio: (result.result.accuracyRatio * 100).toFixed(2),
                     headShotsRatio: (result.result.headShots / result.result.basicStats.kills * 100).toFixed(2)
                 }
-                return stat_rendering(ctx, session, self)
+                //return stat_rendering(ctx, session, self)
             } catch (error) {
                 logger.error('处理战绩1时出错')
                 console.log(error)
@@ -101,7 +100,7 @@ export async function stat(ctx: Context, config: Config, session: any, playernam
                 accuracyRatio: (result.result.accuracyRatio * 100).toFixed(2),
                 headShotsRatio: (result.result.headShots / result.result.basicStats.kills * 100).toFixed(2)
             }
-            return stat_rendering(ctx, session, self)
+            // return stat_rendering(ctx, session, self)
         } catch (error) {
             logger.error('处理战绩2时出错')
             console.log(error)
