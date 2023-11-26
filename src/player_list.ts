@@ -62,6 +62,7 @@ async function playerlist13(ctx: Context, config: Config, session: any, serverna
         let player: Array<any> = self.data.data.GDAT[0].ROST
         let team_all = await team_merge(ctx, config, player)
         //canvas画图
+        logger.info('开始画图')
         return render_playerlist(ctx, config, session, self, team_all)
     } catch (error) {
         logger.info('无法获取到玩家列表,ip可能被封锁')
@@ -77,9 +78,9 @@ async function render_playerlist(ctx: Context, config, session, self, team_all: 
     try {
         //根据当前服务器地图为背景
         //let pic = Random.pick(fs.readdirSync(path.resolve(__dirname, './assets/bf1-images-resource/Maps'), 'utf8'))
-        let image = await ctx.canvas.loadImage(path.resolve(__dirname, './assets/bf1-images-resource/Maps/' + self.data.data.GDAT[0].ATTR.level + '.jpg'))
-        let team1 = await ctx.canvas.loadImage(path.resolve(__dirname, './assets/bf1-images-resource/Teams/' + MapTeamDict[self.data.data.GDAT[0].ATTR.level].Team1 + '.png'))
-        let team2 = await ctx.canvas.loadImage(path.resolve(__dirname, './assets/bf1-images-resource/Teams/' + MapTeamDict[self.data.data.GDAT[0].ATTR.level].Team2 + '.png'))
+        let image = await ctx.canvas.loadImage(path.resolve(__dirname, './assets/Maps/' + self.data.data.GDAT[0].ATTR.level + '.jpg'))
+        let team1 = await ctx.canvas.loadImage(path.resolve(__dirname, './assets/Teams/' + MapTeamDict[self.data.data.GDAT[0].ATTR.level].Team1 + '.png'))
+        let team2 = await ctx.canvas.loadImage(path.resolve(__dirname, './assets/Teams/' + MapTeamDict[self.data.data.GDAT[0].ATTR.level].Team2 + '.png'))
         return ctx.canvas.render(1920, 1220, async (ctx) => {
             let base_draw_loc_x1 = 140
             let base_draw_loc_x2 = 1000
@@ -223,7 +224,7 @@ async function render_playerlist(ctx: Context, config, session, self, team_all: 
             }
         })
     } catch (error) {
-
+        logger.info(error)
     }
 
 }

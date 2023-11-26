@@ -7,6 +7,8 @@ import { } from '@koishijs/plugin-help'
 import { command } from './command'
 import { refresh_self } from './server_manager_account'
 
+export const inject = ['canvas']
+
 export const name = 'index'
 export interface Config {
   bf1_accounts_personaId_list: Array<string>
