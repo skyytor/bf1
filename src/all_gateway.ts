@@ -329,14 +329,15 @@ async function post(ctx: Context, config: Config, data: object) {
             method: 'post',
             headers: headers,
             data: data,
-            timeout: 10000
+            timeout: 60000
         })
         return {
             data: result.data.result,
             error: null
         }
     } catch (error) {
-        console.log(error)
+        logger.info('通用post请求出错')
+        logger.info(error)
         return {
             data: null,
             error: { message: await error_handle(error.response.data.error.code + '') }
@@ -379,11 +380,17 @@ export async function playerlist13(ctx: Context, gameid: string) {
             },
             timeout: 3000
         })
-        return result
+        return {
+            data: result.data,
+            error: null
+        }
     } catch (error) {
         logger.info('error with bf1playerlist13')
-        console.log(error)
-        return error.response.data
+        //console.log(error)
+        return {
+            data: null,
+            error: error.response.data
+        }
     }
 
 }

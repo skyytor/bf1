@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-bf1",
   "description": "",
-  "version": "0.3.69-canary",
+  "version": "0.3.79-pubfortx",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -22,5 +22,15 @@
   },
   "dependencies": {
     "node-schedule": "^2.1.1"
+  },
+  "koishi": {
+    "description": {
+      "zh": "bf1插件"
+    },
+    "service": {
+      "required": [
+        "canvas"
+      ]
+    }
   }
 }

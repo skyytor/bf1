@@ -42,6 +42,12 @@ export function apply(ctx: Context, config: Config) {
     Promise.all(config.bf1_accounts_personaId_list.map(personaId_temp => refresh_self(ctx, personaId_temp)))
   })
 
+  scheduleJob('0 0/40 * * * ? ', () => {
+    logger.info(new Date().toLocaleString())
+    
+  })
+
+
   command(ctx, config)
 
 }
