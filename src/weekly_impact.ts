@@ -5,14 +5,22 @@ const logger = new Logger('weekly_impact')
 
 export { bf1stat, campaign, exchange }
 async function bf1stat(ctx: Context, config: Config, session: any) {
-    let result = await api.bf1stat(ctx)
-    session.send(String(h('quote', { id: session.messageId })) +
-        `bf1总在线人数:  ${result.data.regions.ALL.amounts.soldierAmount}  
-bf1开启服务器总数:  ${result.data.regions.ALL.amounts.serverAmount}
-亚洲人数:  ${result.data.regions.Asia.amounts.soldierAmount}
-亚洲开启服务器数:  ${result.data.regions.Asia.amounts.serverAmount}
-欧洲人数:  ${result.data.regions.EU.amounts.soldierAmount}  
-欧洲开启服务器数: ${result.data.regions.EU.amounts.serverAmount}`)
+
+    let temp = await ctx.database.get('bf1_dau', {})
+    console.log(temp)
+    if (temp.length === 0)
+        session.send('读取数据失败，数据库为空')
+
+    else {
+        session.send(String(h('quote', { id: session.messageId })) +
+            `获取时间： ${temp[temp.length - 1].time.toLocaleString()}
+bf1总在线人数:  ${temp[temp.length - 1].all_dau}  
+亚洲人数：${temp[temp.length - 1].asia_dau}
+欧洲人数：${temp[temp.length - 1].europe_dau}  
+官服人数：${temp[temp.length - 1].official_dau}
+私服人数：${temp[temp.length - 1].private_dau}
+`)
+    }
 }
 
 async function exchange(ctx: Context, config: Config, session: any) {
@@ -34,7 +42,7 @@ async function exchange(ctx: Context, config: Config, session: any) {
 async function campaign(ctx: Context, config: Config, session: any) {
     let result = await api.campaign(ctx, config)
     console.log(result)
-    if (result.data==null) {
+    if (result.data == null) {
         await session.send('当前暂无行动')
         return
     }

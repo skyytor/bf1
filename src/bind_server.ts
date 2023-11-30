@@ -3,7 +3,7 @@ import * as api from './all_gateway'
 import { Config } from './index'
 const logger = new Logger('bind_server')
 
-export async function 创建群组(ctx: Context, config: Config, session, groupname, group_qq) {
+export async function 创建群组(ctx: Context, session: Session, groupname, group_qq) {
 
     try {
         await ctx.database.create('bf1group', {
@@ -16,7 +16,7 @@ export async function 创建群组(ctx: Context, config: Config, session, groupn
     }
 }
 
-export async function 删除群组(ctx: Context, config: Config, session, groupname) {
+export async function 删除群组(ctx: Context, session: Session, groupname) {
 
     try {
         await ctx.database.remove('bf1group', {
@@ -28,7 +28,7 @@ export async function 删除群组(ctx: Context, config: Config, session, groupn
     }
 }
 
-export async function 绑服(ctx: Context, config: Config, session, groupname, servername: string, gameid: string) {
+export async function 绑服(ctx: Context, config: Config, session: Session, groupname, servername: string, server_order: string, gameid: string) {
     if (!servername) {
         session.send('请输入需要绑定服的名称~')
         return
@@ -45,7 +45,7 @@ export async function 绑服(ctx: Context, config: Config, session, groupname, s
         return
     }
     let serverinfo = await ctx.database.get('server', {
-        gameid: gameid
+        gameId: gameid
     })
     if (serverinfo.length > 0) {
         session.send('该gameid已绑定过服务器~')
@@ -63,9 +63,10 @@ export async function 绑服(ctx: Context, config: Config, session, groupname, s
             await ctx.database.upsert('server', [{
                 serverId: result.data.rspInfo.server.serverId,
                 servername: servername,
-                gameid: gameid,
+                gameId: gameid,
                 guid: result.data.serverInfo.guid,
-                belong_group: groupname
+                belong_group: groupname,
+                server_order: server_order
             }])
 
             session.send(String(h('quote', { id: session.messageId })) +
@@ -80,7 +81,7 @@ export async function 绑服(ctx: Context, config: Config, session, groupname, s
     }
 }
 
-export async function 删服(ctx: Context, config: Config, session: any, servername: string) {
+export async function 删服(ctx: Context, session: Session, servername: string) {
     let serverinfo = await ctx.database.get('server', {
         servername: servername,
     })
@@ -94,16 +95,16 @@ export async function 删服(ctx: Context, config: Config, session: any, servern
     else logger.info('未查询到相关信息，可能是服务器名或gameid错误')
 }
 
-export async function 查服(ctx: Context, config: Config, session: any, gameid: string) {
+export async function 查服(ctx: Context, session: Session, gameid: string) {
     let serverinfo = await ctx.database.get('server', {
-        gameid: gameid
+        gameId: gameid
     })
     console.log('正在查询')
     if (serverinfo.length == 0) {
         session.send('未查询到此gamid绑定的相关服务器')
     } else {
         session.send(String(h('quote', { id: session.messageId })) +
-            `名称:${serverinfo[0].servername}\ngameid:${serverinfo[0].gameid} `)
+            `名称:${serverinfo[0].servername}\ngameid:${serverinfo[0].gameId} `)
     }
 }
 
@@ -118,13 +119,18 @@ export async function get_group_servers(ctx: Context, config: Config, session: S
     let result1 = await ctx.database.get('server', {
         belong_group: result[0].groupname
     })
-    const promises = []
-    for (let i of result1)
-        promises.push(await api.getServerDetails(ctx, config, i.gameid))
-    let result2 = await Promise.all(promises)
-    let servertemp = []
-    for (let i of result2)
-        servertemp.push(`${i.result.serverInfo.name.substring(0, 30)}\n${i.result.serverInfo.mapNamePretty} ${i.result.serverInfo.mapModePretty} ${i.result.serverInfo.slots.Soldier.current}/64(${i.result.serverInfo.slots.Queue.current})[${i.result.serverInfo.slots.Spectator.current}]`)
-    session.send(String(h('quote', { id: session.messageId })) + servertemp.join('\n'))
+    console.log(result1)
+    if (result) {
+        const promises = []
+        for (let i of result1)
+            promises.push(await api.getServerDetails(ctx, config, i.gameId))
+        let result2 = await Promise.all(promises)
+        let servertemp = []
+        for (let i of result2)
+            servertemp.push(`${i.data.serverInfo.name.substring(0, 30)}\n${i.data.serverInfo.mapNamePretty} ${i.data.serverInfo.mapModePretty} ${i.data.serverInfo.slots.Soldier.current}/64(${i.data.serverInfo.slots.Queue.current})[${i.data.serverInfo.slots.Spectator.current}]`)
+        session.send('-----\n' + servertemp.join('\n'))
+    }
+    else
+        session.send('该群组未绑定过服务器')
 }
 

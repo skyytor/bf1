@@ -1,7 +1,7 @@
 import { Context, Session, Logger } from 'koishi'
 import { Config } from './index'
 export { gametools_url, bili22_url, easb_url }
-export { account, player, server, bf1group, self_account }
+export { account, player, server, bf1group, bf1_dau, self_account }
 export { headers, params, datas, filterJson }
 export { get_account, get_sessionId, get_token, get_personaId, post }
 
@@ -31,14 +31,25 @@ interface player {
 interface server {
     serverId: string
     servername: string
-    gameid: string
+    gameId: string
     guid: string
     belong_group: string
+    server_order: string
 }
 
 interface bf1group {
     groupname: string
     group_qq: string
+}
+
+interface bf1_dau {
+    time: Date
+    all_dau: number
+    asia_dau: number
+    europe_dau: number
+    official_dau: number
+    private_dau: number
+
 }
 
 let self_account: account = {
@@ -118,55 +129,67 @@ let error_code_collection = {
 }
 
 let filterJson = {
-    //所有值都是可选的, 要什么写什么就行, 在getGameData有详细的
-    name: 'dice',
-    serverType: {
-        //服务器类型
-        OFFICIAL: 'off', //官服
-        RANKED: 'on', //私服
-        UNRANKED: 'on', //私服(不计战绩)
-        PRIVATE: 'on' //密码服
+    _filterJson: {
+        //所有值都是可选的, 要什么写什么就行, 在getGameData有详细的
+        name: 'dice',
+        serverType: {
+            //服务器类型
+            OFFICIAL: 'on', //官服
+            RANKED: 'on', //私服
+            UNRANKED: 'on', //私服(不计战绩)
+            PRIVATE: 'on' //密码服
+        },
+        gameModes: {
+            //模式
+            ZoneControl: 'on',
+            AirAssault: 'on',
+            TugOfWar: 'on',
+            Domination: 'on',
+            Breakthrough: 'on',
+            Rush: 'on',
+            TeamDeathMatch: 'on',
+            BreakthroughLarge: 'on',
+            Possession: 'on',
+            Conquest: 'on'
+        },
+        slots: {
+            //空位
+            oneToFive: 'on', //1-5
+            sixToTen: 'on', //6-10
+            none: 'on', //无
+            tenPlus: 'on', //10+
+            all: 'on', //全部
+            spectator: 'on' //观战
+        },
+        regions: {
+            //地区
+            OC: 'on', //大洋
+            Asia: 'on', //亚
+            EU: 'on', //欧
+            Afr: 'on', //非
+            AC: 'on', //南极洲(真有人吗)
+            SAm: 'on', //南美
+            NAm: 'on' //北美
+        }
     },
-    gameModes: {
-        //模式
-        ZoneControl: 'on',
-        AirAssault: 'on',
-        TugOfWar: 'on',
-        Domination: 'on',
-        Breakthrough: 'on',
-        Rush: 'on',
-        TeamDeathMatch: 'on',
-        BreakthroughLarge: 'on',
-        Possession: 'on',
-        Conquest: 'on'
+    get_filterJson() {
+        return this._filterJson
     },
-    slots: {
-        //空位
-        oneToFive: 'on', //1-5
-        sixToTen: 'on', //6-10
-        none: 'on', //无
-        tenPlus: 'on', //10+
-        all: 'on', //全部
-        spectator: 'on' //观战
+
+    set_filterJson(if_open_official) {
+
+        this._filterJson.serverType.OFFICIAL = if_open_official
     },
-    regions: {
-        //地区
-        OC: 'on', //大洋
-        Asia: 'on', //亚
-        EU: 'on', //欧
-        Afr: 'on', //非
-        AC: 'on', //南极洲(真有人吗)
-        SAm: 'on', //南美
-        NAm: 'on' //北美
-    }
 }
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 async function error_handle(error_code: string) {
     const keys = Object.keys(error_code_collection)
     if (keys.indexOf(error_code) > -1)
         return {
-            data: null,
+            data: error_code,
             error: error_code_collection[error_code]
         }
 
@@ -304,7 +327,7 @@ async function get_personaId(ctx: Context, playername: string, token: string) {
                 Authorization: 'Bearer ' + token
             }
         })
-
+        console.log(result.data.personas.persona)
         return result.data.personas.persona
     } catch (error) {
         console.log('出错了,可能是token失效')
@@ -322,14 +345,15 @@ async function post(ctx: Context, config: Config, data: object) {
         let get_account_sessionId = await ctx.database.get('account', {
             personaId: config.bf1_accounts_personaId_list[0]
         })
-        if (get_account_sessionId.length == 0) logger.info('请在配置页面填写personaId')
+        if (get_account_sessionId.length == 0) throw Error('请在配置页面填写personaId')
         self_account.set_account_sessionId(get_account_sessionId[0].sessionId)
         let result = await ctx.http.axios({
             url: bili22_url,
             method: 'post',
             headers: headers,
             data: data,
-            timeout: 60000
+            timeout: 60000,
+
         })
         return {
             data: result.data.result,
@@ -338,9 +362,15 @@ async function post(ctx: Context, config: Config, data: object) {
     } catch (error) {
         logger.info('通用post请求出错')
         logger.info(error)
-        return {
-            data: null,
-            error: { message: await error_handle(error.response.data.error.code + '') }
+        try {
+            return {
+                data: null,
+                error: await error_handle(error.response.data.error.code + '')
+            }
+        } catch (error) {
+            console.log(error)
+            throw Error('未预料的错误')
+
         }
     }
 }
@@ -365,10 +395,8 @@ export async function bf1stat(ctx: Context) {
         }
     }
 }
-//13这玩意还没弄好，先不用
 
 export async function playerlist13(ctx: Context, gameid: string) {
-
     try {
         let result = await ctx.http.axios({
             url: 'http://127.0.0.1:5000/blaze/getPlayerList',
@@ -392,18 +420,17 @@ export async function playerlist13(ctx: Context, gameid: string) {
             error: error.response.data
         }
     }
-
 }
 
 export async function serverinfo(ctx: Context, config: Config, servername: string) {
 
-    filterJson.name = servername
+    filterJson._filterJson.name = servername
     return await post(ctx, config, {
         jsonrpc: '2.0',
         method: 'GameServer.searchServers',
         params: {
             game: 'tunguska',
-            filterJson: JSON.stringify(filterJson),
+            filterJson: JSON.stringify(filterJson._filterJson),
             limit: 200
         },
         id: null

@@ -6,6 +6,8 @@ const logger = new Logger('server_detail_info')
 export { getserverinfo, getServerDetails, timestamp }
 async function getserverinfo(ctx: Context, config: Config, session: any, servername: string) {
     try {
+        
+         api.filterJson.set_filterJson('off')
         let result: any = await api.serverinfo(ctx, config, servername)
         if (result.error)
             return session.send(String(h('quote', { id: (session.messageId) })) + result)
@@ -27,6 +29,7 @@ async function getserverinfo(ctx: Context, config: Config, session: any, servern
 
 async function getServerDetails(ctx: Context, config: Config, session: any, servername: string) {
     try {
+        api.filterJson.set_filterJson('off')
         let result1 = await api.serverinfo(ctx, config, servername)
         if (result1.error)
             return session.send(String(h('quote', { id: (session.messageId) })) + result1)

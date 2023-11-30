@@ -2,6 +2,18 @@ import { Context, Logger, h, Session } from 'koishi'
 import * as api from './all_gateway'
 import { Config } from './index'
 const logger = new Logger('server_manager_tool')
+
+export { kick, ban, unban, unvip, vip, addadmin, removeadmin, chooseLevel }
+
+class bf1rsp {
+    data: {
+        gameId: string,
+        personaId: string,
+        serverId: string
+    }
+    error: null
+}
+
 //没用上
 let map = {
     "格拉巴山": "格拉巴山",
@@ -78,130 +90,116 @@ let map = {
 }
 
 
-export { kick, ban, unban, unvip, vip, addadmin, removeadmin, chooseLevel }
 
-async function rsp(ctx: Context, config: Config, session: Session, servername: string, playername: string) {
+async function rsp(ctx: Context, config: Config, session: Session, server_order: string, playername: string) {
 
-    //验证服务器是否能搜索到且唯一
-    let result1 = await api.serverinfo(ctx, config, servername)
-    if (result1.error)
-        return session.send(String(h('quote', { id: (session.messageId) })) + result1)
-    if (result1.data.gameservers.length > 1)
-        return session.send('搜索到多个服务器，请注意筛选条件')
-    let gameId = result1.data.gameservers[0].gameId
+    let group_temp = await ctx.database.get('bf1group', {
+        group_qq: session.guildId
+    })
+    if (group_temp.length === 0) {
+        session.send('该群聊未绑定过群组')
+        throw Error('该群聊未绑定过群组')
+    }
+
+    let server_temp = await ctx.database.get('server', {
+        belong_group: group_temp[0].groupname,
+        server_order: server_order
+    })
+
     let token = await ctx.database.get('account', {
         personaId: config.bf1_accounts_personaId_list[0]
     })
-    let info1: any = await api.get_personaId(ctx, playername, token[0].token)
-    if (!info1)
-        return session.send('你输入了无效的玩家id')
-    return {
-        gameId: gameId,
-        token: token,
-        personaId: info1[0].personaId
-    }
-}
-async function kick(ctx: Context, config: Config, session: Session, servername: string, playername: string, reason: string = '違反規則') {
-    try {
-        let bf1rsp: any = await rsp(ctx, config, session, servername, playername)
 
-        let result = await api.kick(ctx, config, bf1rsp.gameId, bf1rsp.personaId, reason)
-        if (result.error)
-            return session.send(String(h('quote', { id: (session.messageId) })) + result)
-        session.send(String(h('quote', { id: (session.messageId) })) + '成功踢出玩家' + playername)
-    } catch (error) {
-        console.log(error)
-        session.send('未预料的错误，请联系bot管理员')
-    }
+    let info = await api.get_personaId(ctx, playername, token[0].token)
 
-}
-
-async function ban(ctx: Context, config: Config, session: any, servername: string, playername: string) {
-
-    let bf1rsp: any = await rsp(ctx, config, session, servername, playername)
-    let result3 = await api.getServerDetails(ctx, config, bf1rsp.gameId)
-    let result = await api.ban(ctx, config, result3.data.rspInfo.server.serverId, bf1rsp.personaId)
-    if (result.error)
-        return session.send(String(h('quote', { id: (session.messageId) })) + result)
-    session.send(String(h('quote', { id: (session.messageId) })) +
-        `已在${servername}中封禁了玩家${playername}`)
-
-}
-
-async function unban(ctx: Context, config: Config, session: any, servername: string, playername: string) {
-
-    let bf1rsp: any = await rsp(ctx, config, session, servername, playername)
-    let result3 = await api.getServerDetails(ctx, config, bf1rsp.gameId)
-    let result = await api.unban(ctx, config, result3.data.rspInfo.server.serverId, bf1rsp.personaId)
-    if (result.error)
-        return session.send(String(h('quote', { id: (session.messageId) })) + result)
-    session.send(String(h('quote', { id: (session.messageId) })) +
-        `已在${servername}中解封了玩家${playername}`)
-
-}
-async function vip(ctx: Context, config: Config, session: any, servername: string, playername: string) {
-
-    let bf1rsp: any = await rsp(ctx, config, session, servername, playername)
-    let result3 = await api.getServerDetails(ctx, config, bf1rsp.gameId)
-    let result: any = await api.vip(ctx, config, result3.data.rspInfo.server.serverId, bf1rsp.personaId)
-    if (result.error)
-        return session.send(String(h('quote', { id: (session.messageId) })) + result)
-    session.send(String(h('quote', { id: (session.messageId) })) +
-        `已在${servername}中为玩家${playername}添加vip`)
-
-}
-async function unvip(ctx: Context, config: Config, session: any, servername: string, playername: string) {
-
-    let bf1rsp: any = await rsp(ctx, config, session, servername, playername)
-    let result3 = await api.getServerDetails(ctx, config, bf1rsp.gameId)
-    let result: any = await api.unvip(ctx, config, result3.data.rspInfo.server.serverId, bf1rsp.personaId)
-    if (result.error)
-        return session.send(String(h('quote', { id: (session.messageId) })) + result)
-    session.send(String(h('quote', { id: (session.messageId) })) +
-        `已删除${servername}中玩家${playername}的vip`)
-
-}
-async function addadmin(ctx: Context, config: Config, session: any, servername: string, playername: string) {
-    let bf1rsp: any = await rsp(ctx, config, session, servername, playername)
-
-    let result3 = await api.getServerDetails(ctx, config, bf1rsp.gameId)
-    let result = await api.addadmin(ctx, config, result3.data.rspInfo.server.serverId, bf1rsp.personaId)
-    if (result.error)
-        return session.send(String(h('quote', { id: (session.messageId) })) + result)
-    session.send(String(h('quote', { id: (session.messageId) })) +
-        `已在${servername}中添加玩家${playername}为管理`)
-
-}
-
-async function removeadmin(ctx: Context, config: Config, session: any, servername: string, playername: string) {
-    let bf1rsp: any = await rsp(ctx, config, session, servername, playername)
-
-    let result3 = await api.getServerDetails(ctx, config, bf1rsp.gameId)
-    let result = await api.removeadmin(ctx, config, result3.data.rspInfo.server.serverId, bf1rsp.personaId)
-    if (result.error)
-        return session.send(String(h('quote', { id: (session.messageId) })) + result)
-    session.send(String(h('quote', { id: (session.messageId) })) +
-        `已在${servername}中取消玩家${playername}的管理`)
-    console.log(result)
-}
-async function chooseLevel(ctx: Context, config: Config, session: any, servername: string) {
-    try {
-        let result1 = await api.serverinfo(ctx, config, servername)
-        if (result1.error)
-            return session.send(String(h('quote', { id: (session.messageId) })) + result1)
-        if (result1.data.gameservers.length > 1)
-            return session.send('搜索到多个服务器，请注意筛选条件')
-
-        if ((result1.data.gameservers[0].slots.Soldier.current == 0) && (result1.data.gameservers[0].slots.Spectator.current == 0)) {
-            session.send(String(h('quote', { id: (session.messageId) })) + '服务器未开启')
-            return
+    if (info)
+        return {
+            data: {
+                gameId: server_temp[0].gameId,
+                personaId: info[0].personaId,
+                serverId: server_temp[0].serverId
+            },
+            error: null
         }
-        console.log(result1.data.gameservers[0].guid)
-        let result2 = await api.getServerDetails(ctx, config, result1.data.gameservers[0].gameId)
-        console.log(result2.data.serverInfo.rotation)
+    else {
+        session.send('无效的玩家id')
+        throw Error('无效的玩家id')
+    }
+
+}
+
+async function kick(ctx: Context, config: Config, session: Session, server_order: string, playername: string, reason: string = '違反規則') {
+
+    let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
+    let result = await api.kick(ctx, config, bf1rsp.data.gameId, bf1rsp.data.personaId, reason)
+    session.send('成功踢出玩家' + playername)
+
+}
+async function ban(ctx: Context, config: Config, session: any, server_order: string, playername: string) {
+
+    let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
+    let result = await api.ban(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    session.send(`已在${server_order}中封禁了玩家${playername}`)
+
+}
+
+async function unban(ctx: Context, config: Config, session: any, server_order: string, playername: string) {
+
+    let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
+    let result = await api.unban(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    session.send(`已在${server_order}中解封了玩家${playername}`)
+
+}
+
+async function vip(ctx: Context, config: Config, session: any, server_order: string, playername: string) {
+
+    let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
+    let result: any = await api.vip(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    session.send(`已在${server_order}中为玩家${playername}添加vip`)
+
+}
+async function unvip(ctx: Context, config: Config, session: any, server_order: string, playername: string) {
+
+    let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
+    let result: any = await api.unvip(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    session.send(`已删除${server_order}中玩家${playername}的vip`)
+
+}
+async function addadmin(ctx: Context, config: Config, session: any, server_order: string, playername: string) {
+
+    let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
+    let result = await api.addadmin(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    session.send(`已在${server_order}中添加玩家${playername}为管理`)
+}
+
+async function removeadmin(ctx: Context, config: Config, session: any, server_order: string, playername: string) {
+
+    let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
+    let result = await api.removeadmin(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    session.send(`已在${server_order}中取消玩家${playername}的管理`)
+
+}
+async function chooseLevel(ctx: Context, config: Config, session: any, server_order: string) {
+    try {
+        let group_temp = await ctx.database.get('bf1group', {
+            group_qq: session.guildId
+        })
+        if (group_temp.length === 0) {
+            session.send('该群聊未绑定过群组')
+            throw Error('该群聊未绑定过群组')
+        }
+
+        let server_temp = await ctx.database.get('server', {
+            belong_group: group_temp[0].groupname,
+            server_order: server_order
+        })
+        if (server_temp.length === 0) {
+            session.send('该群组没有' + server_order + '服')
+        }
+        let get_details = await api.getServerDetails(ctx, config, server_temp[0].gameId)
         let message = []
         message.push('当前服务器图池为:')
-        for (let [index, item] of result2.data.serverInfo.rotation.entries()) {
+        for (let [index, item] of get_details.data.serverInfo.rotation.entries()) {
             console.log(item.mapPrettyName + ' ' + item.modePrettyName)
             message.push((index + 1) + ':' + item.mapPrettyName)
         }
@@ -209,18 +207,22 @@ async function chooseLevel(ctx: Context, config: Config, session: any, servernam
         await session.send(message.join('\n'))
         let index = await session.prompt(30000)
         if (index) {
-            logger.info('当前更换的服务器的guid' + result1.data.gameservers[0].guid)
-            await api.chooseLevel(ctx, config, result1.data.gameservers[0].guid, index - 1)
-            session.send(String(h('quote', { id: (session.messageId) })) +
+            logger.info('当前更换的服务器的guid' + get_details.data.serverInfo.guid)
+            let res = await api.chooseLevel(ctx, config, get_details.data.serverInfo.guid, index - 1)
+            console.log(res)
+            if (res.error)
+                return session.send(res.error.error)
+            session.send(
                 '已尝试更换为' +
-                result2.data.serverInfo.rotation[index - 1].mapPrettyName +
-                '\nguid:' + result1.data.gameservers[0].guid)
+                get_details.data.serverInfo.rotation[index - 1].mapPrettyName +
+                '\nguid:' + get_details.data.serverInfo.guid)
         }
         else {
-            session.send(String(h('quote', { id: (session.messageId) })) + '操作已过期')
+            session.send('操作已过期')
         }
     } catch (error) {
-        session.send(String(h('quote', { id: (session.messageId) })) + '出错了，请再试一次')
+        console.log(error)
+        session.send('出错了，请再试一次')
     }
 
 }

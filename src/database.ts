@@ -30,7 +30,7 @@ async function dbextend(ctx: Context) {
             type: 'string',
             nullable: false
         },
-        gameid: {
+        gameId: {
             type: 'string',
             nullable: false
         },
@@ -39,6 +39,10 @@ async function dbextend(ctx: Context) {
             nullable: false
         },
         belong_group: {
+            type: 'string',
+            nullable: false
+        },
+        server_order: {
             type: 'string',
             nullable: false
         }
@@ -79,5 +83,33 @@ async function dbextend(ctx: Context) {
         primary: 'groupname'
     })
 
-
+    ctx.model.extend('bf1_dau', {
+        time: {
+            type: 'date',
+            nullable: false
+        },
+        all_dau: {
+            type: 'integer',
+            nullable: false
+        },
+        asia_dau: {
+            type: 'integer',
+            nullable: false 
+        },
+        europe_dau: {
+            type: 'integer',
+            nullable: false
+        },
+        official_dau: {
+            type: 'integer',
+            nullable: false
+        },
+        private_dau: {
+            type: 'integer',
+            nullable: false
+        }
+    }, {
+        primary: 'time'
+    })
 }
+

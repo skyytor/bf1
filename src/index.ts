@@ -6,6 +6,7 @@ import * as api from './all_gateway'
 import { } from '@koishijs/plugin-help'
 import { command } from './command'
 import { refresh_self } from './server_manager_account'
+import { collect_serverinfo } from './update_server'
 
 export const inject = ['canvas']
 
@@ -30,6 +31,7 @@ declare module 'koishi' {
     server: api.server
     account: api.account
     bf1group: api.bf1group
+    bf1_dau: api.bf1_dau
   }
 }
 
@@ -42,11 +44,10 @@ export function apply(ctx: Context, config: Config) {
     Promise.all(config.bf1_accounts_personaId_list.map(personaId_temp => refresh_self(ctx, personaId_temp)))
   })
 
-  scheduleJob('0 0/40 * * * ? ', () => {
+  /* scheduleJob('0 0/3 * * * ? ', () => {
     logger.info(new Date().toLocaleString())
-    
-  })
-
+    collect_serverinfo(ctx, config)
+  }) */
 
   command(ctx, config)
 
