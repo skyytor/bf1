@@ -1,7 +1,7 @@
 import { Context, Session, Logger } from 'koishi'
 import { Config } from './index'
 export { gametools_url, bili22_url, easb_url }
-export { account, player, server, bf1group, bf1_dau, self_account }
+export { account, player, server, bf1group, bf1_dau, test, self_account }
 export { headers, params, datas, filterJson }
 export { get_account, get_sessionId, get_token, get_personaId, post }
 
@@ -43,6 +43,7 @@ interface bf1group {
 }
 
 interface bf1_dau {
+    id: number
     time: Date
     all_dau: number
     asia_dau: number
@@ -51,6 +52,13 @@ interface bf1_dau {
     private_dau: number
 
 }
+
+interface test {
+    id: number
+    file: JSON
+}
+
+
 
 let self_account: account = {
     id: null,
@@ -123,7 +131,7 @@ let error_code_collection = {
     "-32603": "该账号可能没有对应的权限，也可能是其他问题",
     "-32850": "服务器栏位已满/玩家已在栏位",
     "-32851": "服务器不存在/已过期",
-    "-32856": "玩家不存在",
+    "-32856": "该玩家没玩过bf1",
     "-32857": "无法处置管理员",
     "-32858": "服务器未开启",
 }
@@ -176,7 +184,7 @@ let filterJson = {
         return this._filterJson
     },
 
-    set_filterJson(if_open_official) {
+    set_filterJson(if_open_official: string) {
 
         this._filterJson.serverType.OFFICIAL = if_open_official
     },
@@ -345,7 +353,7 @@ async function post(ctx: Context, config: Config, data: object) {
         let get_account_sessionId = await ctx.database.get('account', {
             personaId: config.bf1_accounts_personaId_list[0]
         })
-        if (get_account_sessionId.length == 0) throw Error('请在配置页面填写personaId')
+        if (get_account_sessionId.length == 0) throw Error('请在配置页面填写personaId,并使用updateremid指令更新session')
         self_account.set_account_sessionId(get_account_sessionId[0].sessionId)
         let result = await ctx.http.axios({
             url: bili22_url,
@@ -353,7 +361,6 @@ async function post(ctx: Context, config: Config, data: object) {
             headers: headers,
             data: data,
             timeout: 60000,
-
         })
         return {
             data: result.data.result,
@@ -361,8 +368,9 @@ async function post(ctx: Context, config: Config, data: object) {
         }
     } catch (error) {
         logger.info('通用post请求出错')
-        logger.info(error)
+        logger.info(error.response.data)
         try {
+
             return {
                 data: null,
                 error: await error_handle(error.response.data.error.code + '')

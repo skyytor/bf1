@@ -19,6 +19,7 @@ export const Config: any = Schema.object({
   bf1_accounts_personaId_list: Schema.array(String).role('table')
     .description('在这里填写你的服管账号的personaId'),
 })
+
 const logger = new Logger(name)
 export const usage = `
  ## 注意事项
@@ -32,6 +33,7 @@ declare module 'koishi' {
     account: api.account
     bf1group: api.bf1group
     bf1_dau: api.bf1_dau
+    test:api.test
   }
 }
 
@@ -44,10 +46,10 @@ export function apply(ctx: Context, config: Config) {
     Promise.all(config.bf1_accounts_personaId_list.map(personaId_temp => refresh_self(ctx, personaId_temp)))
   })
 
-  /* scheduleJob('0 0/3 * * * ? ', () => {
+  scheduleJob('0 0/3 * * * ? ', () => {
     logger.info(new Date().toLocaleString())
     collect_serverinfo(ctx, config)
-  }) */
+  })
 
   command(ctx, config)
 

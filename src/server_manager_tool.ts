@@ -139,6 +139,8 @@ async function ban(ctx: Context, config: Config, session: any, server_order: str
 
     let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
     let result = await api.ban(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    if (result.error)
+        return session.send(result.error.error)
     session.send(`已在${server_order}中封禁了玩家${playername}`)
 
 }
@@ -147,6 +149,8 @@ async function unban(ctx: Context, config: Config, session: any, server_order: s
 
     let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
     let result = await api.unban(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    if (result.error)
+        return session.send(result.error.error)
     session.send(`已在${server_order}中解封了玩家${playername}`)
 
 }
@@ -155,6 +159,8 @@ async function vip(ctx: Context, config: Config, session: any, server_order: str
 
     let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
     let result: any = await api.vip(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    if (result.error)
+        return session.send(result.error.error)
     session.send(`已在${server_order}中为玩家${playername}添加vip`)
 
 }
@@ -162,6 +168,8 @@ async function unvip(ctx: Context, config: Config, session: any, server_order: s
 
     let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
     let result: any = await api.unvip(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    if (result.error)
+        return session.send(result.error.error)
     session.send(`已删除${server_order}中玩家${playername}的vip`)
 
 }
@@ -169,6 +177,8 @@ async function addadmin(ctx: Context, config: Config, session: any, server_order
 
     let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
     let result = await api.addadmin(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    if (result.error)
+        return session.send(result.error.error)
     session.send(`已在${server_order}中添加玩家${playername}为管理`)
 }
 
@@ -176,6 +186,8 @@ async function removeadmin(ctx: Context, config: Config, session: any, server_or
 
     let bf1rsp: bf1rsp = await rsp(ctx, config, session, server_order, playername)
     let result = await api.removeadmin(ctx, config, bf1rsp.data.serverId, bf1rsp.data.personaId)
+    if (result.error)
+        return session.send(result.error.error)
     session.send(`已在${server_order}中取消玩家${playername}的管理`)
 
 }

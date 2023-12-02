@@ -84,32 +84,33 @@ async function dbextend(ctx: Context) {
     })
 
     ctx.model.extend('bf1_dau', {
+        id: {
+            type: 'integer',
+            initial: 0
+        },
         time: {
-            type: 'date',
-            nullable: false
+            type: 'timestamp',
         },
         all_dau: {
             type: 'integer',
-            nullable: false
         },
         asia_dau: {
             type: 'integer',
-            nullable: false 
         },
         europe_dau: {
             type: 'integer',
-            nullable: false
         },
         official_dau: {
             type: 'integer',
-            nullable: false
         },
         private_dau: {
             type: 'integer',
-            nullable: false
         }
     }, {
-        primary: 'time'
+        primary: 'id',
+        autoInc:true
     })
+
+
 }
 

@@ -6,14 +6,14 @@ const logger = new Logger('weekly_impact')
 export { bf1stat, campaign, exchange }
 async function bf1stat(ctx: Context, config: Config, session: any) {
 
-    let temp = await ctx.database.get('bf1_dau', {})
-    console.log(temp)
+    let temp = await ctx.database.get('bf1_dau', { id: (await ctx.database.stats()).tables.bf1_dau.count })
     if (temp.length === 0)
         session.send('读取数据失败，数据库为空')
 
     else {
-        session.send(String(h('quote', { id: session.messageId })) +
-            `获取时间： ${temp[temp.length - 1].time.toLocaleString()}
+        session.send(
+            `----
+获取时间： ${temp[temp.length - 1].time.toLocaleString()}
 bf1总在线人数:  ${temp[temp.length - 1].all_dau}  
 亚洲人数：${temp[temp.length - 1].asia_dau}
 欧洲人数：${temp[temp.length - 1].europe_dau}  

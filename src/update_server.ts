@@ -73,7 +73,6 @@ async function collect_serverinfo(ctx: Context, config: Config,) {
             private_dau: dau.private_dau,
             official_dau: dau.official_dau
         }])
-
     } catch (error) {
         console.log(error)
     }
