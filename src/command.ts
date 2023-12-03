@@ -1,4 +1,4 @@
-import { Context, Logger, h } from 'koishi'
+import { Context, Logger, h, Session, } from 'koishi'
 import * as api from './all_gateway'
 import { Config } from './index'
 import { } from './player_recent'
@@ -14,6 +14,7 @@ import { weapon } from './weapons'
 import { id_verify } from './tyc'
 import { playerlist13 } from './player_list'
 import { collect_serverinfo } from './update_server'
+import { } from '@koishijs/plugin-help'
 const bf = new Logger('command')
 
 export { command }
@@ -36,25 +37,22 @@ async function command(ctx: Context, config: Config) {
         })
     //服务器相关
     ctx.command('服务器相关/服务器 <服务器名称:text>')
-        .usage('需要带上参数，如果不带参数则默认查看本群所绑定的服务器')
         .action(async ({ session }, ...args) => {
-            if (!args[0]) {
+            if (!args[0])
                 await get_group_servers(ctx, config, session)
-            }
             else
                 await getserverinfo(ctx, config, session, args[0])
-
         })
 
-    ctx.command('服务器相关/玩家列表 <servername:text>')
+    ctx.command('服务器相关/玩家列表 <server_order:text>')
         .action(async ({ session }, ...args) => {
             /* if (!args[0])
                 return  '缺少服务器名称~' */
             return await playerlist13(ctx, config, session, '')
         })
 
-    //失效了，不知道是什么原因
-    ctx.command('服务器相关/添加管理 <servername> <playername>', { authority: 3 })
+
+    ctx.command('服务器相关/添加管理 <server_order> <playername>', { authority: 3 })
         .action(async ({ session }, ...args) => {
             if (!args[0])
                 return '缺少服务器名称~'
@@ -62,8 +60,8 @@ async function command(ctx: Context, config: Config) {
                 return '你要给' + args[0] + '的谁上管理呢~'
             await addadmin(ctx, config, session, args[0], args[1])
         })
-    //失效了，不知道是什么原因
-    ctx.command('服务器相关/移除管理 <servername> <playername>', { authority: 3 })
+
+    ctx.command('服务器相关/移除管理 <server_order> <playername>', { authority: 3 })
         .action(async ({ session }, ...args) => {
             if (!args[0])
                 return '缺少服务器名称~'
@@ -149,7 +147,6 @@ async function command(ctx: Context, config: Config) {
         })
 
     //群组管理
-
     ctx.command('群组管理/创建群组 <groupname> <group_qq>', { authority: 4 })
         .action(async ({ session }, ...args) => {
             if (!args[0])
@@ -233,7 +230,7 @@ async function command(ctx: Context, config: Config) {
             //let obj = eval(`( ${info.file} )`)
             //将string格式转换成object对象
             //console.log(obj)
-
+            api.self()
         })
 
     ctx.command('echo <name>')

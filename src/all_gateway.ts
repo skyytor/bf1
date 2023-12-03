@@ -1,123 +1,27 @@
 import { Context, Session, Logger } from 'koishi'
 import { Config } from './index'
-export { gametools_url, bili22_url, easb_url }
-export { account, player, server, bf1group, bf1_dau, test, self_account }
-export { headers, params, datas, filterJson }
+import { account_Impl } from './interface'
+export { bili22_url }
+
+export { headers, filterJson }
 export { get_account, get_sessionId, get_token, get_personaId, post }
 
 const logger = new Logger('api')
 
-interface account {
-    id: number
-    remid: string
-    sid: string
-    sessionId: string
-    personaId: string
-    authcode: string
-    token: string
-    display_name: string
-    set_account_remid: (remid: string) => void
-    set_account_sid: (sid: string) => void
-    set_account_sessionId: (sessionId: string) => void
-    set_account_personaId: (personaId: string) => void
+
+
+
+let self_account = new account_Impl()
+export function self() {
+    self_account.set_account_personaId = '24'
+    console.log(self_account.get_account_personaId)
 }
-
-interface player {
-    qq: string
-    displayName: string
-    personaId: string
-}
-
-interface server {
-    serverId: string
-    servername: string
-    gameId: string
-    guid: string
-    belong_group: string
-    server_order: string
-}
-
-interface bf1group {
-    groupname: string
-    group_qq: string
-}
-
-interface bf1_dau {
-    id: number
-    time: Date
-    all_dau: number
-    asia_dau: number
-    europe_dau: number
-    official_dau: number
-    private_dau: number
-
-}
-
-interface test {
-    id: number
-    file: JSON
-}
-
-
-
-let self_account: account = {
-    id: null,
-    remid: null,
-    sid: null,
-    sessionId: null,
-    authcode: null,
-    token: null,
-    display_name: null,
-    personaId: null,
-    set_account_remid: (remid: string) => {
-        self_account.remid = remid
-    },
-    set_account_sid: (sid: string) => {
-        self_account.remid = sid
-    },
-    set_account_sessionId: (sessionId: string) => {
-        self_account.remid = sessionId
-        headers['X-Gatewaysession'] = sessionId
-    },
-    set_account_personaId: (personaId: string) => {
-        self_account.personaId = personaId
-    }
-}
-
-const gametools_url: string = 'https://api.gametools.network/bf1/'
 const bili22_url: string = 'https://sparta-gw.battlelog.com/jsonrpc/pc/api'
-const easb_url: string = 'https://delivery.easb.cc/games/'
+
 
 let headers = {
     'Content-Type': 'text/json',
     'X-Gatewaysession': self_account.sid
-}
-
-let params = {
-    name: null,
-    platform: 'pc',
-    skip_battlelog: 'false',
-    personaId: null,
-    lang: 'zh-tw',
-    limit: 8
-}
-
-let datas = {
-    jsonrpc: '2.0',
-    method: '',
-    params: {
-        game: 'tunguska',
-        gameId: null,
-        personaId: null,
-        reason: '違反規則',
-        serverId: null,
-        persistedGameId: null,
-        levelIndex: null,
-        filterJson: null,
-        personaIds: null,
-        limit: 200
-    },
-    id: null
 }
 
 let error_code_collection = {
@@ -183,9 +87,7 @@ let filterJson = {
     get_filterJson() {
         return this._filterJson
     },
-
     set_filterJson(if_open_official: string) {
-
         this._filterJson.serverType.OFFICIAL = if_open_official
     },
 }
@@ -200,7 +102,6 @@ async function error_handle(error_code: string) {
             data: error_code,
             error: error_code_collection[error_code]
         }
-
     else return {
         data: null,
         error: '出现错误，但未找到该错误代码所对应的问题，错误代码:' + error_code
@@ -209,7 +110,6 @@ async function error_handle(error_code: string) {
 
 //此处的ctx不能声明为context类型，原因未知
 async function get_account(ctx: any, { remid, sid }: any = {}) {
-
     try {
         if (!remid && !sid) throw new Error('未提供Cookie')
         const Cookie = `${remid ? `remid=${remid};` : ''}${sid ? `sid=${sid};` : ''}`
@@ -230,12 +130,9 @@ async function get_account(ctx: any, { remid, sid }: any = {}) {
                         sid: null,
                         authCode: null
                     }
-
                 }
-
                 let authCode = location.replace(/.*code=(.*)/, '$1')
                 let newCookie = result.headers.get('set-cookie')
-                console.log(newCookie)
                 const matchremid = newCookie[0].match(/remid=([^;]+)/)
                 remid = matchremid[1]
                 let matchsid = newCookie[1].match(/sid=([^;]+)/)
@@ -279,7 +176,6 @@ async function get_account(ctx: any, { remid, sid }: any = {}) {
 }
 //根据authcode来获取sessionId
 async function get_sessionId(ctx: Context, authCode: string) {
-
     try {
         let login = await ctx.http.axios({
             url: bili22_url,
@@ -347,14 +243,13 @@ async function get_personaId(ctx: Context, playername: string, token: string) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //api函数部分
 
-
 async function post(ctx: Context, config: Config, data: object) {
     try {
         let get_account_sessionId = await ctx.database.get('account', {
             personaId: config.bf1_accounts_personaId_list[0]
         })
         if (get_account_sessionId.length == 0) throw Error('请在配置页面填写personaId,并使用updateremid指令更新session')
-        self_account.set_account_sessionId(get_account_sessionId[0].sessionId)
+        self_account.set_account_sessionId = get_account_sessionId[0].sessionId
         let result = await ctx.http.axios({
             url: bili22_url,
             method: 'post',
@@ -370,36 +265,13 @@ async function post(ctx: Context, config: Config, data: object) {
         logger.info('通用post请求出错')
         logger.info(error.response.data)
         try {
-
             return {
                 data: null,
                 error: await error_handle(error.response.data.error.code + '')
             }
         } catch (error) {
-            console.log(error)
-            throw Error('未预料的错误')
-
-        }
-    }
-}
-
-//get
-export async function bf1stat(ctx: Context) {
-
-    try {
-        let result = await ctx.http.axios({
-            url: gametools_url + 'status',
-            method: 'get',
-            params: params
-        })
-        return {
-            data: result.data,
-            error: null
-        }
-    } catch (error) {
-        return {
-            data: null,
-            error: error.response.data
+            logger.info(error)
+            throw Error('未预料的错误,请联系管理员')
         }
     }
 }

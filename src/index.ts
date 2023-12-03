@@ -1,9 +1,7 @@
 import { Context, Schema, h, Logger, Session } from 'koishi'
 import { scheduleJob } from 'node-schedule'
-
+import * as inf from './interface'
 import { dbextend } from './database'
-import * as api from './all_gateway'
-import { } from '@koishijs/plugin-help'
 import { command } from './command'
 import { refresh_self } from './server_manager_account'
 import { collect_serverinfo } from './update_server'
@@ -11,6 +9,7 @@ import { collect_serverinfo } from './update_server'
 export const inject = ['canvas']
 
 export const name = 'index'
+
 export interface Config {
   bf1_accounts_personaId_list: Array<string>
 }
@@ -28,12 +27,11 @@ export const usage = `
 
 declare module 'koishi' {
   interface Tables {
-    player: api.player
-    server: api.server
-    account: api.account
-    bf1group: api.bf1group
-    bf1_dau: api.bf1_dau
-    test:api.test
+    EA_player: inf.EA_player
+    EA_server: inf.EA_server
+    account: inf.account
+    bf1_group: inf.bf1_group
+    bf1_dau: inf.bf1_dau
   }
 }
 
@@ -46,10 +44,10 @@ export function apply(ctx: Context, config: Config) {
     Promise.all(config.bf1_accounts_personaId_list.map(personaId_temp => refresh_self(ctx, personaId_temp)))
   })
 
-  scheduleJob('0 0/3 * * * ? ', () => {
+ /*  scheduleJob('0 0/3 * * * ? ', () => {
     logger.info(new Date().toLocaleString())
     collect_serverinfo(ctx, config)
-  })
+  }) */
 
   command(ctx, config)
 

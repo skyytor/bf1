@@ -1,13 +1,9 @@
-import { Context, Session, Logger } from 'koishi'
+import { Context, Logger } from 'koishi'
 export { dbextend }
-const bf = new Logger('database')
+const db = new Logger('database')
 
 async function dbextend(ctx: Context) {
-    ctx.model.extend('player', {
-        qq: {
-            type: 'string',
-            nullable: false
-        },
+    ctx.model.extend('EA_player', {
         displayName: {
             type: 'string',
             nullable: false
@@ -21,7 +17,7 @@ async function dbextend(ctx: Context) {
     }
     )
 
-    ctx.model.extend('server', {
+    ctx.model.extend('EA_server', {
         serverId: {
             type: 'string',
             nullable: false
@@ -70,17 +66,17 @@ async function dbextend(ctx: Context) {
     }
     )
 
-    ctx.model.extend('bf1group', {
-        groupname: {
+    ctx.model.extend('bf1_group', {
+        group_name: {
             type: 'string',
             nullable: false
         },
-        group_qq: {
+        group_id: {
             type: 'string',
             nullable: false
         }
     }, {
-        primary: 'groupname'
+        primary: 'group_name'
     })
 
     ctx.model.extend('bf1_dau', {
@@ -108,7 +104,7 @@ async function dbextend(ctx: Context) {
         }
     }, {
         primary: 'id',
-        autoInc:true
+        autoInc: true
     })
 
 
